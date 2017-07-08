@@ -1,0 +1,14 @@
+---
+applications:
+- name: remediation-rabbitmq-consumer
+  memory: 512M
+  instances: 1
+  host: remediation-rmq-consumer-${random-word}
+  path: target/remediation-rabbitmq-consumer.jar
+  services:
+     - remediation-cfdf-rabbit
+#    - remediation-rmq
+  env:
+    SPRING_PROFILES_ACTIVE: cloud
+    DEBUG: "true"
+    debug: "true"
