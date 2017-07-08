@@ -77,10 +77,10 @@ class ScaleIntegration {
     IntegrationFlow scaler() {
 
         MessageSource<QueueStatistics> qms = () ->
-                MessageBuilder.withPayload(queueStatistics(queueName)).build();
+                MessageBuilder.withPayload(queueStatistics(this.queueName)).build();
 
         return IntegrationFlows
-                .from(qms, sp -> sp.poller(p -> p.fixedRate(1000)))
+                .from(qms, sp -> sp.poller(p -> p.fixedRate(10 * 1000)))
                 .transform((Transformer) message -> {
                     Object payload = message.getPayload();
                     QueueStatistics statistics = QueueStatistics.class.cast(payload);
@@ -93,6 +93,8 @@ class ScaleIntegration {
                     statsMap.put("queue-size", size);
                     statsMap.put("queue-consumers", consumers);
                     statsMap.put("application-name", this.applicationName);
+
+                    log.info("statistics: " + statsMap.toString());
 
                     int average = 0;
                     if (size > 0 && consumers > 0)
@@ -110,6 +112,7 @@ class ScaleIntegration {
                         client.applications()
                                 .get(GetApplicationRequest.builder().name(this.applicationName).build())
                                 .map(ApplicationDetail::getRunningInstances)
+                                .filter(instances -> instances < 20) // we don't want more than 20 instances of the app!
                                 .flatMap(instances ->
                                         client
                                                 .applications()
