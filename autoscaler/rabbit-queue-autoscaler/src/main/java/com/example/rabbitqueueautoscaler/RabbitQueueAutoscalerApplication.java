@@ -37,7 +37,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @SpringBootApplication
- public class RabbitQueueAutoscalerApplication {
+public class RabbitQueueAutoscalerApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(RabbitQueueAutoscalerApplication.class, args);
@@ -74,13 +74,13 @@ class ScaleIntegration {
     }
 
     @Bean
-    IntegrationFlow scaler(PollerMetadata pollerMetadata) {
+    IntegrationFlow scaler() {
 
         MessageSource<QueueStatistics> qms = () ->
                 MessageBuilder.withPayload(queueStatistics(queueName)).build();
 
         return IntegrationFlows
-                .from(qms, sp -> sp.poller(pollerMetadata))
+                .from(qms, sp -> sp.poller(p -> p.fixedRate(1000)))
                 .transform((Transformer) message -> {
                     Object payload = message.getPayload();
                     QueueStatistics statistics = QueueStatistics.class.cast(payload);
@@ -125,7 +125,6 @@ class ScaleIntegration {
                     .getConsumerCount());
         });
     }
-
 }
 
 @Configuration
